@@ -3,7 +3,7 @@ import fs from 'fs';
 import * as tunnel from 'tunnel';
 import pkg from '../package.json';
 
-const axios = require('axios-https-proxy-fix');
+const axios = require('axios');
 const axiosHttpAdapter = require('axios/lib/adapters/http');
 
 const id = pkg.name;
@@ -45,7 +45,7 @@ const getIp = (type = 4) => new Promise(async (resolve, reject) => {
 const setRecord = (hostname, username, password, ip, proxy) => new Promise(async (resolve, reject) => {
   try {
     const basicAuth = btoa(`${username}:${password}`);
-    const response = await axios.post('https://domains.google.com/nic/update', null, {
+    const { data } = await axios.post('https://domains.google.com/nic/update', null, {
       adapter: axiosHttpAdapter,
       params: {
         hostname,
@@ -59,8 +59,11 @@ const setRecord = (hostname, username, password, ip, proxy) => new Promise(async
       httpsAgent: proxy,
       proxy: false,
     });
-    console.log('response', response);
-    resolve(true);
+    if (/^good|nochg/.test(data)) {
+      resolve(data);
+    } else {
+      reject(new Error(`设置 dns 失败: ${data}`));
+    }
   } catch (err) {
     reject(new Error('设置 dns 失败'));
   }
@@ -98,30 +101,32 @@ const start = () => {
   // https://username:password@host:port
   if (setting.proxy) {
     const proxySetting = {
-      protocol: 'https',
       host: '127.0.0.1',
       port: 1080,
       auth: {
         username: null,
         password: null,
       },
+      proxyAuth: null,
     };
     const [protocol, fullUrl] = setting.proxy.split('://');
-    proxySetting.protocol = protocol;
     const splitUrl = fullUrl.split('@');
     if (splitUrl.length > 1) {
-      [proxySetting.auth.username, proxySetting.auth.password] = splitUrl[0].split(':');
+      [proxySetting.proxyAuth] = splitUrl;
       [proxySetting.host, proxySetting.port] = splitUrl[1].split(':');
     } else {
       [proxySetting.host, proxySetting.port] = splitUrl[0].split(':');
       delete proxySetting.auth;
     }
-    proxy = tunnel.httpsOverHttp({
-      proxy: {
-        host: proxySetting.host,
-        port: proxySetting.port,
-      },
-    });
+    if (protocol === 'https') {
+      proxy = tunnel.httpsOverHttp({
+        proxy: proxySetting,
+      });
+    } else if (protocol === 'http') {
+      proxy = tunnel.httpsOverHttps({
+        proxy: proxySetting,
+      });
+    }
   }
   intervalCall(`${setting['sub-domain']}.${setting.domain}`, setting.username, setting.password, proxy, setting['ip-type']);
 };
@@ -176,7 +181,7 @@ export const settingMenu = [
     key: 'proxy',
     type: 'input',
     name: '使用代理',
-    placeholder: '设置格式：https://username:password@host:port',
+    placeholder: '设置格式：http://[username:password@]host:port',
   },
   {
     key: 'start-on-boot',

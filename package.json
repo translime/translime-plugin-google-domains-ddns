@@ -1,6 +1,6 @@
 {
   "name": "translime-plugin-google-domains-ddns",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "谷歌域名动态dns设置",
   "license": "MIT",
   "keywords": [
@@ -41,12 +41,10 @@
   "plugin": {
     "title": "google domains ddns",
     "description": "定时获取ip并设定为谷歌域名的解析",
-    "xwindowUrl": "dist/ui.html",
-    "windowUrl": "http://localhost:3001/ui.html"
+    "windowUrl": "dist/ui.html"
   },
   "dependencies": {
     "axios": "^0.26.1",
-    "axios-https-proxy-fix": "^0.17.1",
     "preact": "^10.6.6",
     "tunnel": "^0.0.6"
   }
