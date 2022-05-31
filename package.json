@@ -41,10 +41,13 @@
   "plugin": {
     "title": "google domains ddns",
     "description": "定时获取ip并设定为谷歌域名的解析",
-    "windowUrl": "dist/ui.html"
+    "xwindowUrl": "dist/ui.html",
+    "windowUrl": "http://localhost:3001/ui.html"
   },
   "dependencies": {
     "axios": "^0.26.1",
-    "preact": "^10.6.6"
+    "axios-https-proxy-fix": "^0.17.1",
+    "preact": "^10.6.6",
+    "tunnel": "^0.0.6"
   }
 }

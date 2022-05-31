@@ -1,8 +1,9 @@
 import path from 'path';
 import fs from 'fs';
+import * as tunnel from 'tunnel';
 import pkg from '../package.json';
 
-const axios = require('axios');
+const axios = require('axios-https-proxy-fix');
 const axiosHttpAdapter = require('axios/lib/adapters/http');
 
 const id = pkg.name;
@@ -43,20 +44,22 @@ const getIp = (type = 4) => new Promise(async (resolve, reject) => {
 });
 const setRecord = (hostname, username, password, ip, proxy) => new Promise(async (resolve, reject) => {
   try {
-    await axios.post('https://domains.google.com/nic/update', null, {
+    const basicAuth = btoa(`${username}:${password}`);
+    const response = await axios.post('https://domains.google.com/nic/update', null, {
       adapter: axiosHttpAdapter,
       params: {
         hostname,
         myip: ip,
       },
-      auth: {
-        username,
-        password,
-      },
       timeout: 60000,
       responseType: 'text',
-      proxy,
+      headers: {
+        Authorization: `Basic ${basicAuth}`,
+      },
+      httpsAgent: proxy,
+      proxy: false,
     });
+    console.log('response', response);
     resolve(true);
   } catch (err) {
     reject(new Error('设置 dns 失败'));
@@ -99,8 +102,8 @@ const start = () => {
       host: '127.0.0.1',
       port: 1080,
       auth: {
-        username: '',
-        password: '',
+        username: null,
+        password: null,
       },
     };
     const [protocol, fullUrl] = setting.proxy.split('://');
@@ -111,8 +114,14 @@ const start = () => {
       [proxySetting.host, proxySetting.port] = splitUrl[1].split(':');
     } else {
       [proxySetting.host, proxySetting.port] = splitUrl[0].split(':');
+      delete proxySetting.auth;
     }
-    proxy = proxySetting;
+    proxy = tunnel.httpsOverHttp({
+      proxy: {
+        host: proxySetting.host,
+        port: proxySetting.port,
+      },
+    });
   }
   intervalCall(`${setting['sub-domain']}.${setting.domain}`, setting.username, setting.password, proxy, setting['ip-type']);
 };
