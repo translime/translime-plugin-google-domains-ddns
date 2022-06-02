@@ -1,6 +1,6 @@
 {
   "name": "translime-plugin-google-domains-ddns",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "谷歌域名动态dns设置",
   "license": "MIT",
   "keywords": [

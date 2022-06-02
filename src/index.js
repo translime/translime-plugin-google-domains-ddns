@@ -59,6 +59,7 @@ const setRecord = (hostname, username, password, ip, proxy) => new Promise(async
       httpsAgent: proxy,
       proxy: false,
     });
+    pushLog(`接口返回值：${data}`);
     if (/^good|nochg/.test(data)) {
       resolve(data);
     } else {

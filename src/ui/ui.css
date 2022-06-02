@@ -33,9 +33,13 @@ h1 {
 }
 
 .main {
-  @apply flex-grow p-2;
+  @apply flex-grow p-2 overflow-y-scroll;
   background-color: #1f1f1f;
   opacity: .4;
+}
+
+.main::-webkit-scrollbar {
+  display: none;
 }
 
 html:hover .main {
