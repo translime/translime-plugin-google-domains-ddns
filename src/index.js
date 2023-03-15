@@ -1,9 +1,9 @@
-const path = require('path');
-const fs = require('fs');
-const tunnel = require('tunnel');
-const axios = require('axios');
-const axiosHttpAdapter = require('axios/lib/adapters/http');
-const pkg = require('../package.json');
+import path from 'path';
+import fs from 'fs';
+import * as tunnel from 'tunnel';
+import axios from 'axios';
+import axiosHttpAdapter from 'axios/lib/adapters/http';
+import pkg from '../package.json';
 
 const id = pkg.name;
 const pluginDir = path.resolve(global.APPDATA_PATH, 'google-domains-ddns');
@@ -136,7 +136,7 @@ const stop = () => {
 };
 
 // 加载时执行
-const pluginDidLoad = () => {
+export const pluginDidLoad = () => {
   checkPluginDir();
   const setting = global.store.get(`plugin.${id}.settings`, {});
   if (setting['start-on-boot']) {
@@ -145,12 +145,12 @@ const pluginDidLoad = () => {
 };
 
 // 禁用时执行
-const pluginWillUnload = () => {
+export const pluginWillUnload = () => {
   stop();
 };
 
 // 插件设置表单
-const settingMenu = [
+export const settingMenu = [
   {
     key: 'username',
     type: 'input',
@@ -206,7 +206,7 @@ const settingMenu = [
 ];
 
 // ipc 定义
-const ipcHandlers = [
+export const ipcHandlers = [
   {
     type: 'start',
     handler: () => () => {
@@ -231,7 +231,7 @@ const ipcHandlers = [
 ];
 
 // 窗口选项
-const windowOptions = {
+export const windowOptions = {
   minWidth: 320,
   width: 320,
   height: 240,
@@ -239,12 +239,4 @@ const windowOptions = {
   resizable: false,
   transparent: true,
   titleBarStyle: 'default',
-};
-
-module.exports = {
-  pluginDidLoad,
-  pluginWillUnload,
-  settingMenu,
-  ipcHandlers,
-  windowOptions,
 };
