@@ -1,9 +1,10 @@
 import path from 'path';
 import fs from 'fs';
 import * as tunnel from 'tunnel';
-import axios from 'axios';
-import axiosHttpAdapter from 'axios/lib/adapters/http';
 import pkg from '../package.json';
+
+const axios = require('axios');
+const axiosHttpAdapter = require('axios/lib/adapters/http');
 
 const id = pkg.name;
 const pluginDir = path.resolve(global.APPDATA_PATH, 'google-domains-ddns');
