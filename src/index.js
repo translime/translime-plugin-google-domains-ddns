@@ -1,14 +1,21 @@
 import path from 'path';
 import fs from 'fs';
 import * as tunnel from 'tunnel';
+import verCmp from 'semver-compare';
+import axios from 'axios';
+import axiosHttpAdapter from 'axios/unsafe/adapters/http';
 import pkg from '../package.json';
 
-const axios = require('axios');
-const axiosHttpAdapter = require('axios/lib/adapters/http');
-
 const id = pkg.name;
-const pluginDir = path.resolve(global.APPDATA_PATH, 'google-domains-ddns');
+const { mainStore } = global;
+const APP_VERSION = mainStore?.APP_VERSION || '0.0.0';
+const isVerDot3 = verCmp(APP_VERSION, '0.3.0') >= 0;
+const APPDATA_PATH = isVerDot3 ? mainStore.APPDATA_PATH : global.APPDATA_PATH;
+const pluginDir = path.resolve(APPDATA_PATH, 'google-domains-ddns');
 const logFile = path.resolve(pluginDir, 'logs.txt');
+const pluginWin = isVerDot3 ? () => mainStore.getChildWin(`plugin-window-${id}`) : global.childWins[`plugin-window-${id}`];
+const ipc = isVerDot3 ? mainStore.ipc() : global.ipc;
+const config = isVerDot3 ? mainStore.config : global.store;
 
 let timer;
 const checkPluginDir = () => {
@@ -26,8 +33,8 @@ const pushLog = (log) => {
   if (logs.length > 300) {
     logs.shift();
   }
-  if (global.childWins[`plugin-window-${id}`]) {
-    global.ipc.sendToClient('logs', logs, global.childWins[`plugin-window-${id}`]);
+  if (pluginWin()) {
+    ipc.sendToClient('logs', logs, pluginWin());
   }
 };
 const getIp = (type = 4) => new Promise(async (resolve, reject) => {
@@ -94,7 +101,7 @@ const start = () => {
     return;
   }
   let proxy = null;
-  const setting = global.store.get(`plugin.${id}.settings`, {});
+  const setting = config.get(`plugin.${id}.settings`, {});
   if (!setting['sub-domain'] || !setting.domain || !setting.username || !setting.password) {
     pushLog('请先配置');
     return;
@@ -139,7 +146,7 @@ const stop = () => {
 // 加载时执行
 export const pluginDidLoad = () => {
   checkPluginDir();
-  const setting = global.store.get(`plugin.${id}.settings`, {});
+  const setting = config.get(`plugin.${id}.settings`, {});
   if (setting['start-on-boot']) {
     start();
   }
@@ -223,8 +230,8 @@ export const ipcHandlers = [
   {
     type: 'isRunning',
     handler: () => () => {
-      if (global.childWins[`plugin-window-${id}`]) {
-        global.ipc.sendToClient('logs', logs, global.childWins[`plugin-window-${id}`]);
+      if (pluginWin()) {
+        ipc.sendToClient('logs', logs, pluginWin());
       }
       return Promise.resolve(!!timer);
     },
